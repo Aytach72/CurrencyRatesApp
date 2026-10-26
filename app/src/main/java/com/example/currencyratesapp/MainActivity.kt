@@ -20,6 +20,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -42,23 +44,26 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    // ViewModel створюється один раз на рівні навігації
+    val viewModel: CurrencyViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = "list") {
-        // Маршрут 1: Список
         composable("list") {
             CurrencyScreen(
+                viewModel = viewModel,
                 onItemClick = { id ->
                     navController.navigate("details/$id")
                 }
             )
         }
-        // Маршрут 2: Деталі (з аргументом itemId)
         composable(
             route = "details/{itemId}",
             arguments = listOf(navArgument("itemId") { type = NavType.IntType })
         ) { backStackEntry ->
             val itemId = backStackEntry.arguments?.getInt("itemId") ?: 0
-            val currency = sampleData[itemId]
+            val currentState by viewModel.uiState.collectAsStateWithLifecycle()
+            val currency = currentState.items[itemId]
+
             DetailScreen(
                 currency = currency,
                 onBackClick = { navController.popBackStack() }
@@ -67,27 +72,19 @@ fun AppNavigation() {
     }
 }
 
-// Виносимо список на глобальний рівень, щоб обидва екрани мали до нього доступ
-val sampleData = listOf(
-    Currency("USD", "Долар США", 38.45, true, "Долар США", "Офіційний курс НБУ. Основна світова резервна валюта."),
-    Currency("EUR", "Євро", 41.20, false, "Євро", "Офіційна валюта Європейського Союзу."),
-    Currency("PLN", "Польський злотий", 9.55, false, "Польський злотий", "Національна валюта Польщі."),
-    Currency("GBP", "Фунт стерлінгів", 48.10, true, "Фунт стерлінгів", "Національна валюта Великої Британії."),
-    Currency("CHF", "Швейцарський франк", 42.30, false, "Швейцарський франк", "Валюта Швейцарії, відома своєю стабільністю."),
-    Currency("JPY", "Японська єна", 0.25, false, "Японська єна", "Національна валюта Японії."),
-    Currency("CAD", "Канадський долар", 28.15, false, "Канадський долар", "Валюта Канади."),
-    Currency("CNY", "Китайський юань", 5.30, false, "Китайський юань", "Валюта Китайської Народної Республіки.")
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CurrencyScreen(onItemClick: (Int) -> Unit) {
+fun CurrencyScreen(
+    viewModel: CurrencyViewModel,
+    onItemClick: (Int) -> Unit
+) {
     val context = LocalContext.current
-    var searchQuery by remember { mutableStateOf("") }
+    // Підписка на стан з ViewModel
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val filteredItems = sampleData.filter {
-        it.name.contains(searchQuery, ignoreCase = true) ||
-                it.code.contains(searchQuery, ignoreCase = true)
+    val filteredItems = uiState.items.filter {
+        it.name.contains(uiState.searchQuery, ignoreCase = true) ||
+                it.code.contains(uiState.searchQuery, ignoreCase = true)
     }
 
     Scaffold(
@@ -107,8 +104,8 @@ fun CurrencyScreen(onItemClick: (Int) -> Unit) {
                 .fillMaxSize()
         ) {
             OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
+                value = uiState.searchQuery,
+                onValueChange = { viewModel.onSearchQueryChange(it) },
                 label = { Text("Пошук валюти (напр. USD)") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -121,8 +118,7 @@ fun CurrencyScreen(onItemClick: (Int) -> Unit) {
                     CurrencyCard(
                         currency = currency,
                         onCardClick = {
-                            // Знаходимо індекс елемента у списку і передаємо його як ID
-                            val index = sampleData.indexOf(currency)
+                            val index = uiState.items.indexOf(currency)
                             onItemClick(index)
                         },
                         onFavoriteClick = {
@@ -145,7 +141,7 @@ fun CurrencyCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        onClick = onCardClick // ✅ ОСЬ ЦЕЙ РЯДОК РОБИТЬ КАРТКУ КЛІКАБЕЛЬНОЮ
+        onClick = onCardClick
     ) {
         Row(
             modifier = Modifier

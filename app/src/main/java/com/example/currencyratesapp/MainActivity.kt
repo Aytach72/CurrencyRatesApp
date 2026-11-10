@@ -28,6 +28,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.currencyratesapp.ui.theme.CurrencyRatesAppTheme
+// ПРАВИЛЬНІ ІМПОРТИ:
+import com.example.currencyratesapp.domain.Currency
+import com.example.currencyratesapp.presentation.CurrencyViewModel
+import com.example.currencyratesapp.presentation.DetailScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,12 +66,15 @@ fun AppNavigation() {
         ) { backStackEntry ->
             val itemId = backStackEntry.arguments?.getInt("itemId") ?: 0
             val currentState by viewModel.uiState.collectAsStateWithLifecycle()
-            val currency = currentState.items[itemId]
 
-            DetailScreen(
-                currency = currency,
-                onBackClick = { navController.popBackStack() }
-            )
+            // Безпечна перевірка, щоб додаток не вилітав, якщо індекс не знайдено
+            if (itemId in currentState.items.indices) {
+                val currency = currentState.items[itemId]
+                DetailScreen(
+                    currency = currency,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.currencyratesapp
+package com.example.currencyratesapp.presentation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.currencyratesapp.domain.Currency // ПРАВИЛЬНИЙ ІМПОРТ
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,24 +55,44 @@ fun DetailScreen(
                 fontWeight = FontWeight.Medium
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = "Поточний курс:", fontWeight = FontWeight.Bold)
-                    Text(text = "%.2f ₴".format(currency.rate), fontSize = 22.sp, color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        text = "Поточний курс:",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "%.2f ₴".format(currency.rate),
+                        fontSize = 28.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(text = "Опис:", fontWeight = FontWeight.Bold)
-                    Text(text = currency.description)
+                    Text(
+                        text = "Опис:",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = currency.description,
+                        fontSize = 16.sp
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(text = "Статус: ${if (currency.isFavorite) "В обраному" else "Не в обраному"}")
+                    Text(
+                        text = if (currency.isFavorite) "Статус: В обраному" else "Статус: Не в обраному",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
                 }
             }
         }

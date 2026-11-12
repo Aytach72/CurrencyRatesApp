@@ -17,7 +17,6 @@ data class CurrencyUiState(
 )
 
 class CurrencyViewModel : ViewModel() {
-    // Вручну створюємо залежності
     private val repository = CurrencyRepositoryImpl()
     private val getCurrenciesUseCase = GetCurrenciesUseCase(repository)
 

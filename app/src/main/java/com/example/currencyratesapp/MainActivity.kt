@@ -28,7 +28,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.currencyratesapp.ui.theme.CurrencyRatesAppTheme
-// ПРАВИЛЬНІ ІМПОРТИ:
 import com.example.currencyratesapp.domain.Currency
 import com.example.currencyratesapp.presentation.CurrencyViewModel
 import com.example.currencyratesapp.presentation.DetailScreen
@@ -48,7 +47,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    // ViewModel створюється один раз на рівні навігації
     val viewModel: CurrencyViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = "list") {
@@ -67,7 +65,6 @@ fun AppNavigation() {
             val itemId = backStackEntry.arguments?.getInt("itemId") ?: 0
             val currentState by viewModel.uiState.collectAsStateWithLifecycle()
 
-            // Безпечна перевірка, щоб додаток не вилітав, якщо індекс не знайдено
             if (itemId in currentState.items.indices) {
                 val currency = currentState.items[itemId]
                 DetailScreen(
@@ -86,7 +83,6 @@ fun CurrencyScreen(
     onItemClick: (Int) -> Unit
 ) {
     val context = LocalContext.current
-    // Підписка на стан з ViewModel
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val filteredItems = uiState.items.filter {

@@ -1,7 +1,6 @@
 package com.example.currencyratesapp
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -16,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -82,7 +80,6 @@ fun CurrencyScreen(
     viewModel: CurrencyViewModel,
     onItemClick: (Int) -> Unit
 ) {
-    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val filteredItems = uiState.items.filter {
@@ -125,7 +122,7 @@ fun CurrencyScreen(
                             onItemClick(index)
                         },
                         onFavoriteClick = {
-                            Toast.makeText(context, "Обрано: ${currency.code}", Toast.LENGTH_SHORT).show()
+                            viewModel.toggleFavorite(currency.code) // <-- ТУТ ВИКЛИК ФУНКЦІЇ
                         }
                     )
                 }

@@ -23,7 +23,16 @@ class CurrencyRepositoryImpl : CurrencyRepository {
                 )
             )
 
+            // РОЗШИРЕНИЙ СПИСОК ВАЛЮТ (14 штук)
+            val allowedCodes = listOf(
+                "USD", "GBP", "CHF", "JPY", "CAD", "AUD", // Основні світові
+                "PLN", "CZK", "HUF", "RON", "MDL", "TRY", "CNY"  // Сусіди та партнери
+            )
+
             response.rates.forEach { (code, rateToEur) ->
+                // ФІЛЬТР: якщо валюти немає в дозволеному списку - пропускаємо її
+                if (code !in allowedCodes) return@forEach
+
                 // Рахуємо скільки гривень коштує 1 одиниця валюти
                 val rateInUah = rateToEur * eurToUah
 
@@ -49,13 +58,19 @@ class CurrencyRepositoryImpl : CurrencyRepository {
     private fun getCurrencyName(code: String): String {
         return when (code) {
             "USD" -> "Долар США"
-            "PLN" -> "Польський злотий"
+            "EUR" -> "Євро"
             "GBP" -> "Фунт стерлінгів"
             "CHF" -> "Швейцарський франк"
             "JPY" -> "Японська єна"
             "CAD" -> "Канадський долар"
+            "AUD" -> "Австралійський долар"
+            "PLN" -> "Польський злотий"
+            "CZK" -> "Чеська крона"
+            "HUF" -> "Угорський форинт"
+            "RON" -> "Румунський лей"
+            "MDL" -> "Молдовський лей"
+            "TRY" -> "Турецька ліра"
             "CNY" -> "Китайський юань"
-            "UAH" -> "Гривня"
             else -> code
         }
     }

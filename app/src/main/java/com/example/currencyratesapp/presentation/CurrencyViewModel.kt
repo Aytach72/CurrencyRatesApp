@@ -41,4 +41,16 @@ class CurrencyViewModel : ViewModel() {
             currentState.copy(searchQuery = query)
         }
     }
+    fun toggleFavorite(currencyCode: String) {
+        _uiState.update { currentState ->
+            val updatedItems = currentState.items.map { currency ->
+                if (currency.code == currencyCode) {
+                    currency.copy(isFavorite = !currency.isFavorite)
+                } else {
+                    currency
+                }
+            }
+            currentState.copy(items = updatedItems)
+        }
+    }
 }

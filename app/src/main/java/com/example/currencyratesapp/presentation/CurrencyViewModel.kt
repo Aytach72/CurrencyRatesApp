@@ -1,6 +1,7 @@
 package com.example.currencyratesapp.presentation
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.currencyratesapp.data.CurrencyRepositoryImpl
 import com.example.currencyratesapp.domain.Currency
@@ -13,11 +14,14 @@ import kotlinx.coroutines.launch
 
 data class CurrencyUiState(
     val items: List<Currency> = emptyList(),
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val isError: Boolean = false
 )
 
-class CurrencyViewModel : ViewModel() {
-    private val repository = CurrencyRepositoryImpl()
+class CurrencyViewModel(application: Application) : AndroidViewModel(application) {
+
+    // Передаем контекст приложения для базы Room
+    private val repository = CurrencyRepositoryImpl(application.applicationContext)
     private val getCurrenciesUseCase = GetCurrenciesUseCase(repository)
 
     private val _uiState = MutableStateFlow(CurrencyUiState())
@@ -28,11 +32,18 @@ class CurrencyViewModel : ViewModel() {
     }
 
     private fun loadCurrencies() {
+        // 1. Подписываемся на базу (данные из кеша придут сразу)
         viewModelScope.launch {
-            val currencies = getCurrenciesUseCase()
-            _uiState.update { currentState ->
-                currentState.copy(items = currencies)
+            getCurrenciesUseCase().collect { currencies ->
+                _uiState.update { currentState ->
+                    currentState.copy(items = currencies)
+                }
             }
+        }
+
+        // 2. Запускаем обновление из интернета в фоне
+        viewModelScope.launch {
+            repository.refresh()
         }
     }
 
@@ -41,6 +52,7 @@ class CurrencyViewModel : ViewModel() {
             currentState.copy(searchQuery = query)
         }
     }
+
     fun toggleFavorite(currencyCode: String) {
         _uiState.update { currentState ->
             val updatedItems = currentState.items.map { currency ->

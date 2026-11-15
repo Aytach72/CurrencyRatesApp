@@ -1,5 +1,6 @@
 package com.example.currencyratesapp
 
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,11 +16,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -45,7 +49,15 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val viewModel: CurrencyViewModel = viewModel()
+    val context = LocalContext.current
+
+    val viewModel: CurrencyViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                CurrencyViewModel(context.applicationContext as Application)
+            }
+        }
+    )
 
     NavHost(navController = navController, startDestination = "list") {
         composable("list") {
@@ -122,7 +134,7 @@ fun CurrencyScreen(
                             onItemClick(index)
                         },
                         onFavoriteClick = {
-                            viewModel.toggleFavorite(currency.code) // <-- ТУТ ВИКЛИК ФУНКЦІЇ
+                            viewModel.toggleFavorite(currency.code)
                         }
                     )
                 }

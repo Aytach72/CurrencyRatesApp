@@ -1,36 +1,29 @@
 package com.example.currencyratesapp.data
 
-import android.content.Context
 import android.util.Log
-import androidx.room.Room
-import com.example.currencyratesapp.data.database.AppDatabase
+import com.example.currencyratesapp.data.database.CurrencyDao
 import com.example.currencyratesapp.domain.Currency
 import com.example.currencyratesapp.domain.CurrencyRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
-class CurrencyRepositoryImpl(context: Context) : CurrencyRepository {
+class CurrencyRepositoryImpl @Inject constructor(
+    private val api: CurrencyApi,
+    private val dao: CurrencyDao
+) : CurrencyRepository {
 
-    // Подключаем базу данных Room
-    private val db = Room.databaseBuilder(
-        context.applicationContext,
-        AppDatabase::class.java, "currency_database"
-    ).fallbackToDestructiveMigration().build()
-
-    private val dao = db.currencyDao()
     private val eurToUah = 44.5
 
-    // 1. Читаем ВСЕГДА из базы данных
     override fun observeCurrencies(): Flow<List<Currency>> {
         return dao.getAll().map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    // 2. Обновляем данные из сети и сохраняем в базу
     override suspend fun refresh() {
         try {
-            val response = RetrofitClient.api.getLatestRates()
+            val response = api.getLatestRates()
             val resultList = mutableListOf<Currency>()
 
             resultList.add(
@@ -55,12 +48,10 @@ class CurrencyRepositoryImpl(context: Context) : CurrencyRepository {
                 )
             }
 
-            // СОХРАНЯЕМ В БАЗУ
             dao.insertAll(resultList.map { it.toEntity() })
             Log.d("API_SUCCESS", "Данные сохранены в Room")
 
         } catch (e: Exception) {
-            // Если нет интернета, ничего не стираем, просто пишем в лог
             Log.e("API_ERROR", "Нет сети, показываем кеш: ${e.message}")
         }
     }

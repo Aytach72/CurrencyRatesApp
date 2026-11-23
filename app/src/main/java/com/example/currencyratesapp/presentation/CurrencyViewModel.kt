@@ -1,27 +1,29 @@
 package com.example.currencyratesapp.presentation
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.currencyratesapp.data.CurrencyRepositoryImpl
 import com.example.currencyratesapp.domain.Currency
+import com.example.currencyratesapp.domain.CurrencyRepository
 import com.example.currencyratesapp.domain.GetCurrenciesUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+// ВОТ ЭТОТ КЛАСС ДОЛЖЕН БЫТЬ ОБЯЗАТЕЛЬНО
 data class CurrencyUiState(
     val items: List<Currency> = emptyList(),
-    val searchQuery: String = "",
-    val isError: Boolean = false
+    val searchQuery: String = ""
 )
 
-class CurrencyViewModel(application: Application) : AndroidViewModel(application) {
+@HiltViewModel
+class CurrencyViewModel @Inject constructor(
+    private val repository: CurrencyRepository
+) : ViewModel() {
 
-    // Передаем контекст приложения для базы Room
-    private val repository = CurrencyRepositoryImpl(application.applicationContext)
     private val getCurrenciesUseCase = GetCurrenciesUseCase(repository)
 
     private val _uiState = MutableStateFlow(CurrencyUiState())
@@ -32,16 +34,11 @@ class CurrencyViewModel(application: Application) : AndroidViewModel(application
     }
 
     private fun loadCurrencies() {
-        // 1. Подписываемся на базу (данные из кеша придут сразу)
         viewModelScope.launch {
             getCurrenciesUseCase().collect { currencies ->
-                _uiState.update { currentState ->
-                    currentState.copy(items = currencies)
-                }
+                _uiState.update { it.copy(items = currencies) }
             }
         }
-
-        // 2. Запускаем обновление из интернета в фоне
         viewModelScope.launch {
             repository.refresh()
         }

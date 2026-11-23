@@ -2,7 +2,7 @@ pluginManagement {
     repositories {
         google()
         mavenCentral()
-        gradlePluginPortal()
+        gradlePluginPortal() // <-- ЭТА СТРОКА ОБЯЗАТЕЛЬНА ДЛЯ HILT
     }
 }
 dependencyResolutionManagement {
